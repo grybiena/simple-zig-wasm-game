@@ -1,8 +1,8 @@
 const direction = @import("direction.zig");
-const dimensions = @import("dimensions.zig");
+const dimension = @import("dimension.zig");
 pub const XY = struct { x: u8, y: u8 };
 
-pub fn shiftXY(boundary: dimensions.WH, toward: direction.XY, position: XY) XY {
+pub fn shiftXY(boundary: dimension.WH, toward: direction.XY, position: XY) XY {
     switch (toward) {
         .up => {
             return XY{ .x = position.x, .y = shiftNeg(position.y) };

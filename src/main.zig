@@ -1,9 +1,5 @@
 const std = @import("std");
-const basictiles = @import("basictiles.zig");
-const characters = @import("characters.zig");
 const game = @import("game.zig");
-const coord = @import("coord.zig");
-const direction = @import("direction.zig");
 const input = @import("input.zig");
 
 extern fn consoleLog(arg: u32) void;
@@ -26,7 +22,7 @@ export fn seedRng(seed: u64) void {
     state.randomize();
 }
 export fn drawCanvas() void {
-    state.render();
+    state.draw();
 }
 
 export fn onInput(key: input.Key) void {
