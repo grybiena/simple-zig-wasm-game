@@ -14,16 +14,7 @@ var canvas_buffer = std.mem.zeroes(
     [canvas_size][canvas_size][4]u8,
 );
 
-var state = game.State{
-    .character_position = game.Coord{ .x = 8, .y = 8 },
-    .character_direction = .down,
-    .background_buffer = std.mem.zeroes(
-        [16][16]basictiles.BasicTile,
-    ),
-    .foreground_buffer = std.mem.zeroes(
-        [16][16]?basictiles.BasicTile,
-    ),
-};
+var state = game.emptyInit();
 
 // The returned pointer will be used as an offset integer to the wasm memory
 export fn getCanvasBufferPointer() [*]u8 {
@@ -36,8 +27,7 @@ export fn getCanvasSize() usize {
 
 export fn seedRng(seed: u64) void {
     prng = std.Random.DefaultPrng.init(seed);
-    state.background_buffer = game.randomFillTileBuffer(&prng);
-    state.foreground_buffer = game.randomFillObjectBuffer(&prng);
+    state = game.randomInit(&prng);
 }
 export fn drawCanvas() void {
     for (0..16) |x| {
