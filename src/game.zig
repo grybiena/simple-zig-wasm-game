@@ -28,6 +28,37 @@ pub const State = struct {
         randomFillTileBuffer(self);
         randomFillObjectBuffer(self);
     }
+
+    pub fn render(self: *State) void {
+        for (0..MAP_DIMS.w) |x| {
+            for (0..MAP_DIMS.h) |y| {
+                drawTile(self, self.background_buffer[x][y], x * 16, y * 16);
+            }
+        }
+
+        for (0..MAP_DIMS.w) |x| {
+            for (0..MAP_DIMS.h) |y| {
+                if (self.foreground_buffer[x][y] != null) {
+                    drawTileOver(self, self.foreground_buffer[x][y].?, x * 16, y * 16);
+                }
+            }
+        }
+
+        const rand = self.prng.random();
+        const j = std.meta.intToEnum(characters.Frame, rand.int(u8) % 3) catch .frame2;
+
+        drawCharacterOver(self, characters.Character{ .direction = self.character_direction, .frame = j }, self.character_position.x * 16, self.character_position.y * 16);
+    }
+
+    pub fn move(self: *State, dire: direction.XY) void {
+        faceDirection(self, dire);
+        if (characterCanMove(self, dire)) {
+            self.character_position = coord.shiftXY(MAP_DIMS, dire, self.character_position);
+            if (!isEmptySpace(self, self.character_position)) {
+                shiftObject(self, dire, self.character_position);
+            }
+        }
+    }
 };
 
 fn emptyInit() State {
@@ -46,6 +77,8 @@ fn emptyInit() State {
         ),
     };
 }
+
+// initialization
 
 fn randomFillObjectBuffer(state: *State) void {
     const rand = state.prng.random();
@@ -82,6 +115,8 @@ pub fn randomFillTileBuffer(state: *State) void {
     }
 }
 
+// movement
+
 pub fn shiftObject(st: *State, dire: direction.XY, pos: coord.XY) void {
     const dest = coord.shiftXY(MAP_DIMS, dire, pos);
     st.foreground_buffer[dest.x][dest.y] = st.foreground_buffer[pos.x][pos.y];
@@ -109,4 +144,43 @@ pub fn characterCanMove(st: *State, dire: direction.XY) bool {
 
 pub fn faceDirection(st: *State, dire: direction.XY) void {
     st.character_direction = dire;
+}
+
+// drawing
+
+fn drawTile(state: *State, tile: basictiles.BasicTile, x_pos: usize, y_pos: usize) void {
+    drawReplace(&state.canvas_buffer, basictiles.getBasicTile(tile), x_pos, y_pos);
+}
+
+fn drawTileOver(state: *State, tile: basictiles.BasicTile, x_pos: usize, y_pos: usize) void {
+    drawOver(&state.canvas_buffer, basictiles.getBasicTile(tile), x_pos, y_pos);
+}
+
+fn drawCharacterOver(state: *State, tile: characters.Character, x_pos: usize, y_pos: usize) void {
+    drawOver(&state.canvas_buffer, characters.getCharacter(tile), x_pos, y_pos);
+}
+
+fn drawReplace(buffer: *[CANVAS_SIZE][CANVAS_SIZE][4]u8, tile: *const [16][16][4]u8, x_pos: usize, y_pos: usize) void {
+    const tile_width = 16;
+    for (0..tile_width) |x| {
+        for (0..tile_width) |y| {
+            buffer[y_pos + y][x_pos + x] = tile[x][y];
+        }
+    }
+}
+
+fn drawOver(buffer: *[CANVAS_SIZE][CANVAS_SIZE][4]u8, tile: *const [16][16][4]u8, x_pos: usize, y_pos: usize) void {
+    const tile_width = 16;
+    for (0..tile_width) |x| {
+        for (0..tile_width) |y| {
+            const a_o = tile[x][y][3];
+
+            if (a_o > 0) {
+                buffer[y_pos + y][x_pos + x][0] = tile[x][y][0];
+                buffer[y_pos + y][x_pos + x][1] = tile[x][y][1];
+                buffer[y_pos + y][x_pos + x][2] = tile[x][y][2];
+                buffer[y_pos + y][x_pos + x][3] = tile[x][y][3];
+            }
+        }
+    }
 }
