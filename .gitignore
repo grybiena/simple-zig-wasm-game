@@ -1,0 +1,5 @@
+zig-cache/
+*.o
+.direnv
+.zig-cache
+.DS_Store
