@@ -8,7 +8,7 @@ const input = @import("input.zig");
 
 extern fn consoleLog(arg: u32) void;
 
-var state = game.emptyInit();
+var state = game.State.new();
 
 // The returned pointer will be used as an offset integer to the wasm memory
 // BE CAREFUL! reassigning state to a new struct in zig then accessing the old pointer
@@ -22,8 +22,8 @@ export fn getCanvasSize() usize {
 }
 
 export fn seedRng(seed: u64) void {
-    state.prng = std.Random.DefaultPrng.init(seed);
-    game.randomize(&state);
+    state.seed(seed);
+    state.randomize();
 }
 export fn drawCanvas() void {
     for (0..16) |x| {

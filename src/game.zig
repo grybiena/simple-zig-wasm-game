@@ -15,9 +15,22 @@ pub const State = struct {
     character_direction: direction.XY,
     background_buffer: [MAP_DIMS.w][MAP_DIMS.h]basictiles.BasicTile,
     foreground_buffer: [MAP_DIMS.w][MAP_DIMS.h]?basictiles.BasicTile,
+
+    pub fn new() State {
+        return emptyInit();
+    }
+
+    pub fn seed(self: *State, s: u64) void {
+        self.prng = std.Random.DefaultPrng.init(s);
+    }
+
+    pub fn randomize(self: *State) void {
+        randomFillTileBuffer(self);
+        randomFillObjectBuffer(self);
+    }
 };
 
-pub fn emptyInit() State {
+fn emptyInit() State {
     return State{
         .prng = std.Random.DefaultPrng.init(0),
         .canvas_buffer = std.mem.zeroes(
@@ -34,12 +47,7 @@ pub fn emptyInit() State {
     };
 }
 
-pub fn randomize(state: *State) void {
-    randomFillTileBuffer(state);
-    randomFillObjectBuffer(state);
-}
-
-pub fn randomFillObjectBuffer(state: *State) void {
+fn randomFillObjectBuffer(state: *State) void {
     const rand = state.prng.random();
     state.foreground_buffer = std.mem.zeroes(
         [MAP_DIMS.w][MAP_DIMS.h]?basictiles.BasicTile,
@@ -58,9 +66,6 @@ pub fn randomFillObjectBuffer(state: *State) void {
 
 pub fn randomFillTileBuffer(state: *State) void {
     const rand = state.prng.random();
-    state.background_buffer = std.mem.zeroes(
-        [MAP_DIMS.w][MAP_DIMS.h]basictiles.BasicTile,
-    );
     for (0..MAP_DIMS.w) |x| {
         for (0..MAP_DIMS.h) |y| {
             const grass = rand.int(u8) % 4;
