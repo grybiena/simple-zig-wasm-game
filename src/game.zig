@@ -1,49 +1,49 @@
 const std = @import("std");
 const basictiles = @import("basictiles.zig");
 const characters = @import("characters.zig");
+const direction = @import("direction.zig");
+const dimensions = @import("dimensions.zig");
+const coord = @import("coord.zig");
 
-pub const Coord = struct { x: u8, y: u8 };
-
-pub const map_width = 16;
-pub const map_height = 16;
+pub const map_dims = dimensions.WH{ .w = 16, .h = 16 };
 
 pub const State = struct {
-    character_position: Coord,
-    character_direction: characters.Direction,
-    background_buffer: [map_width][map_height]basictiles.BasicTile,
-    foreground_buffer: [map_width][map_height]?basictiles.BasicTile,
+    character_position: coord.XY,
+    character_direction: direction.XY,
+    background_buffer: [map_dims.w][map_dims.h]basictiles.BasicTile,
+    foreground_buffer: [map_dims.w][map_dims.h]?basictiles.BasicTile,
 };
 
 pub fn emptyInit() State {
     return State{
-        .character_position = Coord{ .x = 8, .y = 8 },
+        .character_position = coord.XY{ .x = 8, .y = 8 },
         .character_direction = .down,
         .background_buffer = std.mem.zeroes(
-            [map_width][map_height]basictiles.BasicTile,
+            [map_dims.w][map_dims.h]basictiles.BasicTile,
         ),
         .foreground_buffer = std.mem.zeroes(
-            [map_width][map_height]?basictiles.BasicTile,
+            [map_dims.w][map_dims.h]?basictiles.BasicTile,
         ),
     };
 }
 
 pub fn randomInit(prng: *std.Random.DefaultPrng) State {
     return State{
-        .character_position = Coord{ .x = 8, .y = 8 },
+        .character_position = coord.XY{ .x = 8, .y = 8 },
         .character_direction = .down,
         .background_buffer = randomFillTileBuffer(prng),
         .foreground_buffer = randomFillObjectBuffer(prng),
     };
 }
 
-pub fn randomFillObjectBuffer(prng: *std.Random.DefaultPrng) [map_width][map_height]?basictiles.BasicTile {
+pub fn randomFillObjectBuffer(prng: *std.Random.DefaultPrng) [map_dims.w][map_dims.h]?basictiles.BasicTile {
     const rand = prng.random();
     var buffer = std.mem.zeroes(
-        [map_width][map_height]?basictiles.BasicTile,
+        [map_dims.w][map_dims.h]?basictiles.BasicTile,
     );
     for (0..10) |_| {
-        const cx = rand.int(u8) % map_width;
-        const cy = rand.int(u8) % map_height;
+        const cx = rand.int(u8) % map_dims.w;
+        const cy = rand.int(u8) % map_dims.h;
         const i = rand.int(u8) % 2;
         if (i == 0) {
             buffer[cx][cy] = .shrub1;
@@ -54,13 +54,13 @@ pub fn randomFillObjectBuffer(prng: *std.Random.DefaultPrng) [map_width][map_hei
     return buffer;
 }
 
-pub fn randomFillTileBuffer(prng: *std.Random.DefaultPrng) [map_width][map_height]basictiles.BasicTile {
+pub fn randomFillTileBuffer(prng: *std.Random.DefaultPrng) [map_dims.w][map_dims.h]basictiles.BasicTile {
     const rand = prng.random();
     var buffer = std.mem.zeroes(
-        [map_width][map_height]basictiles.BasicTile,
+        [map_dims.w][map_dims.h]basictiles.BasicTile,
     );
-    for (0..map_width) |x| {
-        for (0..map_height) |y| {
+    for (0..map_dims.w) |x| {
+        for (0..map_dims.h) |y| {
             const grass = rand.int(u8) % 4;
             if (grass == 0) {
                 buffer[x][y] = .grass1;
@@ -74,4 +74,33 @@ pub fn randomFillTileBuffer(prng: *std.Random.DefaultPrng) [map_width][map_heigh
         }
     }
     return buffer;
+}
+
+pub fn shiftObject(st: *State, dire: direction.XY, pos: coord.XY) void {
+    const dest = coord.shiftXY(map_dims, dire, pos);
+    st.foreground_buffer[dest.x][dest.y] = st.foreground_buffer[pos.x][pos.y];
+    st.foreground_buffer[pos.x][pos.y] = null;
+}
+
+pub fn isEmptySpace(st: *State, pos: coord.XY) bool {
+    return st.foreground_buffer[pos.x][pos.y] == null;
+}
+
+pub fn characterCanMove(st: *State, dire: direction.XY) bool {
+    const dest = coord.shiftXY(map_dims, dire, st.character_position);
+    if (std.meta.eql(dest, st.character_position)) {
+        return false;
+    }
+    if (isEmptySpace(st, dest)) {
+        return true;
+    }
+    const push_dest = coord.shiftXY(map_dims, dire, dest);
+    if (isEmptySpace(st, push_dest)) {
+        return true;
+    }
+    return false;
+}
+
+pub fn faceDirection(st: *State, dire: direction.XY) void {
+    st.character_direction = dire;
 }

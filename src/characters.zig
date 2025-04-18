@@ -1,4 +1,5 @@
 const std = @import("std");
+const direction = @import("direction.zig");
 
 const pixel_width = width * 16;
 const pixel_height = height * 16;
@@ -36,18 +37,11 @@ fn getTiles() [width][height][16][16][4]u8 {
     return tile_buffer;
 }
 
-pub const characters = getTiles();
+const characters = getTiles();
 
 pub const Character = struct {
-    direction: Direction,
+    direction: direction.XY,
     frame: Frame,
-};
-
-pub const Direction = enum {
-    down,
-    left,
-    right,
-    up,
 };
 
 pub const Frame = enum {
@@ -62,14 +56,14 @@ pub fn getCharacter(tile: Character) *const [16][16][4]u8 {
 
 const character = bakeCharacter();
 
-fn bakeCharacter() [std.enums.directEnumArrayLen(Frame, 0)][std.enums.directEnumArrayLen(Direction, 0)][16][16][4]u8 {
+fn bakeCharacter() [std.enums.directEnumArrayLen(Frame, 0)][std.enums.directEnumArrayLen(direction.XY, 0)][16][16][4]u8 {
     var buffer = std.mem.zeroes(
-        [std.enums.directEnumArrayLen(Frame, 0)][std.enums.directEnumArrayLen(Direction, 0)][16][16][4]u8,
+        [std.enums.directEnumArrayLen(Frame, 0)][std.enums.directEnumArrayLen(direction.XY, 0)][16][16][4]u8,
     );
     for (std.enums.values(Frame)) |frame| {
-        for (std.enums.values(Direction)) |direction| {
+        for (std.enums.values(direction.XY)) |dire| {
             const f = @intFromEnum(frame);
-            const d = @intFromEnum(direction);
+            const d = @intFromEnum(dire);
             buffer[f][d] = characters[@as(u8, f) + 6][d];
         }
     }

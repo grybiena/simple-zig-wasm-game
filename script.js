@@ -29,17 +29,17 @@ WebAssembly.instantiateStreaming(fetch("zig-out/bin/main.wasm"), importObject).t
 
 
     document.body.onkeydown = function(e) {
-      if (e.code === "ArrowRight" || e.code === "KeyD") {
-        result.instance.exports.onInput(3);
+      if (e.code === "ArrowDown" || e.code === "KeyS") {
+        result.instance.exports.onInput(0);
       }
       if (e.code === "ArrowLeft" || e.code === "KeyA") {
+        result.instance.exports.onInput(1);
+      }
+      if (e.code === "ArrowRight" || e.code === "KeyD") {
         result.instance.exports.onInput(2);
       }
       if (e.code === "ArrowUp" || e.code === "KeyW") {
-        result.instance.exports.onInput(0);
-      }
-      if (e.code === "ArrowDown" || e.code === "KeyS") {
-        result.instance.exports.onInput(1);
+        result.instance.exports.onInput(3);
       }
     };
 
