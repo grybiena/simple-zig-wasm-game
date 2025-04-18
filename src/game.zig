@@ -4,7 +4,7 @@ const characters = @import("characters.zig");
 
 pub const Coord = struct { x: u8, y: u8 };
 
-pub const Game = struct {
+pub const State = struct {
     character_position: Coord,
     character_direction: characters.Direction,
     background_buffer: [16][16]basictiles.BasicTile,
