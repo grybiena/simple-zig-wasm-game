@@ -8,29 +8,22 @@ const input = @import("input.zig");
 
 extern fn consoleLog(arg: u32) void;
 
-var prng = std.Random.DefaultPrng.init(0);
-
-const canvas_size: usize = 256;
-
-// canvas_size * 2, where each pixel is 4 bytes (rgba)
-var canvas_buffer = std.mem.zeroes(
-    [canvas_size][canvas_size][4]u8,
-);
-
 var state = game.emptyInit();
 
 // The returned pointer will be used as an offset integer to the wasm memory
+// BE CAREFUL! reassigning state to a new struct in zig then accessing the old pointer
+// from js can/will result in a memory access error
 export fn getCanvasBufferPointer() [*]u8 {
-    return @ptrCast(&canvas_buffer);
+    return @ptrCast(&state.canvas_buffer);
 }
 
 export fn getCanvasSize() usize {
-    return canvas_size;
+    return game.CANVAS_SIZE;
 }
 
 export fn seedRng(seed: u64) void {
-    prng = std.Random.DefaultPrng.init(seed);
-    state = game.randomInit(&prng);
+    state.prng = std.Random.DefaultPrng.init(seed);
+    game.randomize(&state);
 }
 export fn drawCanvas() void {
     for (0..16) |x| {
@@ -47,7 +40,7 @@ export fn drawCanvas() void {
         }
     }
 
-    const rand = prng.random();
+    const rand = state.prng.random();
     const j = std.meta.intToEnum(characters.Frame, rand.int(u8) % 3) catch .frame2;
 
     drawCharacterOver(characters.Character{ .direction = state.character_direction, .frame = j }, state.character_position.x * 16, state.character_position.y * 16);
@@ -57,7 +50,7 @@ export fn onInput(key: input.Key) void {
     const dire = input.toDirection(key);
     game.faceDirection(&state, dire);
     if (game.characterCanMove(&state, dire)) {
-        state.character_position = coord.shiftXY(game.map_dims, dire, state.character_position);
+        state.character_position = coord.shiftXY(game.MAP_DIMS, dire, state.character_position);
         if (!game.isEmptySpace(&state, state.character_position)) {
             game.shiftObject(&state, dire, state.character_position);
         }
@@ -65,18 +58,18 @@ export fn onInput(key: input.Key) void {
 }
 
 fn drawTile(tile: basictiles.BasicTile, x_pos: usize, y_pos: usize) void {
-    drawReplace(&canvas_buffer, basictiles.getBasicTile(tile), x_pos, y_pos);
+    drawReplace(&state.canvas_buffer, basictiles.getBasicTile(tile), x_pos, y_pos);
 }
 
 fn drawTileOver(tile: basictiles.BasicTile, x_pos: usize, y_pos: usize) void {
-    drawOver(&canvas_buffer, basictiles.getBasicTile(tile), x_pos, y_pos);
+    drawOver(&state.canvas_buffer, basictiles.getBasicTile(tile), x_pos, y_pos);
 }
 
 fn drawCharacterOver(tile: characters.Character, x_pos: usize, y_pos: usize) void {
-    drawOver(&canvas_buffer, characters.getCharacter(tile), x_pos, y_pos);
+    drawOver(&state.canvas_buffer, characters.getCharacter(tile), x_pos, y_pos);
 }
 
-fn drawReplace(buffer: *[canvas_size][canvas_size][4]u8, tile: *const [16][16][4]u8, x_pos: usize, y_pos: usize) void {
+fn drawReplace(buffer: *[game.CANVAS_SIZE][game.CANVAS_SIZE][4]u8, tile: *const [16][16][4]u8, x_pos: usize, y_pos: usize) void {
     const tile_width = 16;
     for (0..tile_width) |x| {
         for (0..tile_width) |y| {
@@ -85,7 +78,7 @@ fn drawReplace(buffer: *[canvas_size][canvas_size][4]u8, tile: *const [16][16][4
     }
 }
 
-fn drawOver(buffer: *[canvas_size][canvas_size][4]u8, tile: *const [16][16][4]u8, x_pos: usize, y_pos: usize) void {
+fn drawOver(buffer: *[game.CANVAS_SIZE][game.CANVAS_SIZE][4]u8, tile: *const [16][16][4]u8, x_pos: usize, y_pos: usize) void {
     const tile_width = 16;
     for (0..tile_width) |x| {
         for (0..tile_width) |y| {
