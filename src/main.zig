@@ -14,7 +14,16 @@ var canvas_buffer = std.mem.zeroes(
     [canvas_size][canvas_size][4]u8,
 );
 
-var column_index: usize = 0;
+var game = state.Game{
+    .character_position = state.Coord{ .x = 8, .y = 8 },
+    .character_direction = .down,
+    .background_buffer = std.mem.zeroes(
+        [16][16]basictiles.BasicTile,
+    ),
+    .foreground_buffer = std.mem.zeroes(
+        [16][16]?basictiles.BasicTile,
+    ),
+};
 
 // The returned pointer will be used as an offset integer to the wasm memory
 export fn getCanvasBufferPointer() [*]u8 {
@@ -23,6 +32,42 @@ export fn getCanvasBufferPointer() [*]u8 {
 
 export fn getCanvasSize() usize {
     return canvas_size;
+}
+
+export fn seedRng(seed: u64) void {
+    prng = std.Random.DefaultPrng.init(seed);
+    game.background_buffer = state.randomFillTileBuffer(&prng);
+    game.foreground_buffer = state.randomFillObjectBuffer(&prng);
+}
+export fn drawCanvas() void {
+    for (0..16) |x| {
+        for (0..16) |y| {
+            drawTile(game.background_buffer[x][y], x * 16, y * 16);
+        }
+    }
+
+    for (0..16) |x| {
+        for (0..16) |y| {
+            if (game.foreground_buffer[x][y] != null) {
+                drawTileOver(game.foreground_buffer[x][y].?, x * 16, y * 16);
+            }
+        }
+    }
+
+    const rand = prng.random();
+    const j = std.meta.intToEnum(characters.Frame, rand.int(u8) % 3) catch .frame2;
+
+    drawCharacterOver(characters.Character{ .direction = game.character_direction, .frame = j }, game.character_position.x * 16, game.character_position.y * 16);
+}
+
+export fn onInput(input: Input) void {
+    faceDirection(input);
+    if (canMove(input)) {
+        game.character_position = shiftCoord(input, game.character_position);
+        if (!isEmptySpace(game.character_position)) {
+            shiftObject(input, game.character_position);
+        }
+    }
 }
 
 fn drawTile(tile: basictiles.BasicTile, x_pos: usize, y_pos: usize) void {
@@ -141,52 +186,4 @@ fn faceDirection(input: Input) void {
             game.character_direction = .right;
         },
     }
-}
-
-export fn onInput(input: Input) void {
-    faceDirection(input);
-    if (canMove(input)) {
-        game.character_position = shiftCoord(input, game.character_position);
-        if (!isEmptySpace(game.character_position)) {
-            shiftObject(input, game.character_position);
-        }
-    }
-}
-
-var game = state.Game{
-    .character_position = state.Coord{ .x = 8, .y = 8 },
-    .character_direction = .down,
-    .background_buffer = std.mem.zeroes(
-        [16][16]basictiles.BasicTile,
-    ),
-    .foreground_buffer = std.mem.zeroes(
-        [16][16]?basictiles.BasicTile,
-    ),
-};
-
-export fn seedRng(seed: u64) void {
-    prng = std.Random.DefaultPrng.init(seed);
-    game.background_buffer = state.randomFillTileBuffer(&prng);
-    game.foreground_buffer = state.randomFillObjectBuffer(&prng);
-}
-
-export fn drawCanvas() void {
-    for (0..16) |x| {
-        for (0..16) |y| {
-            drawTile(game.background_buffer[x][y], x * 16, y * 16);
-        }
-    }
-
-    for (0..16) |x| {
-        for (0..16) |y| {
-            if (game.foreground_buffer[x][y] != null) {
-                drawTileOver(game.foreground_buffer[x][y].?, x * 16, y * 16);
-            }
-        }
-    }
-
-    const rand = prng.random();
-    const j = std.meta.intToEnum(characters.Frame, rand.int(u8) % 3) catch .frame2;
-
-    drawCharacterOver(characters.Character{ .direction = game.character_direction, .frame = j }, game.character_position.x * 16, game.character_position.y * 16);
 }
