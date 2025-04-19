@@ -1,5 +1,7 @@
 # A simple game in zig 
 
+The game mechanics are very simple. Move the character and push the objects around.
+
 [Try it](https://blog.grybiena.com/simple-zig-wasm-game/)
 
 ## Thanks to
