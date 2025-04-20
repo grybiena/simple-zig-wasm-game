@@ -1,6 +1,6 @@
 # A simple game in zig 
 
-The game mechanics are very simple. Move the ada and push the pots onto the patches to win. Avoid running into tom.
+The game mechanics are very simple. Move ada and push the pots onto the patches to win. Avoid running into tom.
 
 [Try it](https://blog.grybiena.com/simple-zig-wasm-game/)
 
