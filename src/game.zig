@@ -72,6 +72,7 @@ pub const State = struct {
         }
 
         const tom_dir = movement.tomMove(self);
+        movement.faceDirection(self, .tom, tom_dir);
         if (movement.characterCanMove(self, .tom, tom_dir)) {
             const cur_tom_position = movement.characterPosition(self, .tom);
             const new_tom_position = position.shiftXY(MAP_DIMS, tom_dir, cur_tom_position);
