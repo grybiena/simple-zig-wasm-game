@@ -40,8 +40,14 @@ fn getTiles() [width][height][16][16][4]u8 {
 const characters = getTiles();
 
 pub const Character = struct {
+    identity: Identity,
     direction: direction.XY,
     frame: Frame,
+};
+
+pub const Identity = enum {
+    ada,
+    tom,
 };
 
 pub const Frame = enum {
@@ -51,12 +57,16 @@ pub const Frame = enum {
 };
 
 pub fn getCharacter(tile: Character) *const [16][16][4]u8 {
-    return &character[@intFromEnum(tile.frame)][@intFromEnum(tile.direction)];
+    switch (tile.identity) {
+        .ada => return &ada[@intFromEnum(tile.frame)][@intFromEnum(tile.direction)],
+        .tom => return &tom[@intFromEnum(tile.frame)][@intFromEnum(tile.direction)],
+    }
 }
 
-const character = bakeCharacter();
+const ada = bakeCharacter(2);
+const tom = bakeCharacter(3);
 
-fn bakeCharacter() [std.enums.directEnumArrayLen(Frame, 0)][std.enums.directEnumArrayLen(direction.XY, 0)][16][16][4]u8 {
+fn bakeCharacter(x_offset: u8) [std.enums.directEnumArrayLen(Frame, 0)][std.enums.directEnumArrayLen(direction.XY, 0)][16][16][4]u8 {
     var buffer = std.mem.zeroes(
         [std.enums.directEnumArrayLen(Frame, 0)][std.enums.directEnumArrayLen(direction.XY, 0)][16][16][4]u8,
     );
@@ -64,7 +74,7 @@ fn bakeCharacter() [std.enums.directEnumArrayLen(Frame, 0)][std.enums.directEnum
         for (std.enums.values(direction.XY)) |dire| {
             const f = @intFromEnum(frame);
             const d = @intFromEnum(dire);
-            buffer[f][d] = characters[@as(u8, f) + 6][d];
+            buffer[f][d] = characters[@as(u8, f) + x_offset * 3][d];
         }
     }
 

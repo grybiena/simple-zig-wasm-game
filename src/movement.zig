@@ -2,6 +2,7 @@ const std = @import("std");
 const game = @import("game.zig");
 const direction = @import("direction.zig");
 const position = @import("position.zig");
+const object = @import("object.zig");
 
 const CANVAS_SIZE = game.CANVAS_SIZE;
 const MAP_DIMS = game.MAP_DIMS;
@@ -16,9 +17,29 @@ pub fn isEmptySpace(st: *game.State, pos: position.XY) bool {
     return st.foreground_buffer[pos.x][pos.y] == null;
 }
 
+// TODO extract all relevant info into struct in one pass
+pub fn adaPosition(st: *game.State) position.XY {
+    for (0..MAP_DIMS.w) |x| {
+        for (0..MAP_DIMS.h) |y| {
+            const o = st.foreground_buffer[x][y];
+            if (o == null) continue;
+            switch (o.?) {
+                .character => |c| {
+                    if (c.sprite == .ada) {
+                        return position.XY{ .x = @intCast(x), .y = @intCast(y) };
+                    }
+                },
+                else => continue,
+            }
+        }
+    }
+    unreachable;
+}
+
 pub fn characterCanMove(st: *game.State, dire: direction.XY) bool {
-    const dest = position.shiftXY(MAP_DIMS, dire, st.character_position);
-    if (std.meta.eql(dest, st.character_position)) {
+    const ada_pos = adaPosition(st);
+    const dest = position.shiftXY(MAP_DIMS, dire, ada_pos);
+    if (std.meta.eql(dest, ada_pos)) {
         return false;
     }
     if (isEmptySpace(st, dest)) {
@@ -32,5 +53,6 @@ pub fn characterCanMove(st: *game.State, dire: direction.XY) bool {
 }
 
 pub fn faceDirection(st: *game.State, dire: direction.XY) void {
-    st.character_direction = dire;
+    const ada_pos = adaPosition(st);
+    st.foreground_buffer[ada_pos.x][ada_pos.y] = object.Object{ .character = object.Character{ .sprite = .ada, .direction = dire } };
 }

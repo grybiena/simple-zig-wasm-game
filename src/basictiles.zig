@@ -43,8 +43,8 @@ pub const BasicTile = enum {
     grass2,
     grass3,
     grass4,
-    shrub1,
-    stone1,
+    shrub,
+    patch,
     pot,
 };
 
@@ -54,8 +54,8 @@ pub fn getBasicTile(tile: BasicTile) *const [16][16][4]u8 {
         .grass2 => &basictiles[4][1],
         .grass3 => &basictiles[0][8],
         .grass4 => &basictiles[1][8],
-        .shrub1 => &basictiles[4][2],
-        .stone1 => &basictiles[1][9],
+        .shrub => &basictiles[4][2],
+        .patch => &basictiles[2][2],
         .pot => &basictiles[3][3],
     };
 }
