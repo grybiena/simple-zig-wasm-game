@@ -9,12 +9,15 @@ pub fn drawTile(state: *game.State, tile: basictiles.BasicTile, x_pos: usize, y_
     drawReplace(&state.canvas_buffer, basictiles.getBasicTile(tile), x_pos, y_pos);
 }
 
+pub fn drawGoal(state: *game.State, x_pos: usize, y_pos: usize) void {
+    drawOver(&state.canvas_buffer, basictiles.getBasicTile(.patch), x_pos, y_pos);
+}
+
 pub fn drawObject(state: *game.State, o: object.Object, x_pos: usize, y_pos: usize) void {
     switch (o) {
         .character => |c| drawCharacter(state, c, x_pos, y_pos),
         .pushable => |p| drawPushable(state, p, x_pos, y_pos),
         .static => |s| drawStatic(state, s, x_pos, y_pos),
-        .goal => |g| drawGoal(state, g, x_pos, y_pos),
     }
 }
 
@@ -29,16 +32,6 @@ fn drawPushable(state: *game.State, _: object.Pushable, x_pos: usize, y_pos: usi
 
 fn drawStatic(state: *game.State, _: object.Static, x_pos: usize, y_pos: usize) void {
     drawOver(&state.canvas_buffer, basictiles.getBasicTile(.shrub), x_pos, y_pos);
-}
-
-fn drawGoal(state: *game.State, g: object.Goal, x_pos: usize, y_pos: usize) void {
-    drawOver(&state.canvas_buffer, basictiles.getBasicTile(.patch), x_pos, y_pos);
-    switch (g) {
-        .empty => {},
-        .filled => {
-            drawOver(&state.canvas_buffer, basictiles.getBasicTile(.pot), x_pos, y_pos);
-        },
-    }
 }
 
 fn drawReplace(buffer: *[CANVAS_SIZE][CANVAS_SIZE][4]u8, tile: *const [16][16][4]u8, x_pos: usize, y_pos: usize) void {

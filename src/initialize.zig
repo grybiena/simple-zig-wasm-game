@@ -15,7 +15,10 @@ pub fn empty() game.State {
         .background_buffer = std.mem.zeroes(
             [MAP_DIMS.w][MAP_DIMS.h]basictiles.BasicTile,
         ),
-        .foreground_buffer = std.mem.zeroes(
+        .goal_buffer = std.mem.zeroes(
+            [MAP_DIMS.w][MAP_DIMS.h]bool,
+        ),
+        .object_buffer = std.mem.zeroes(
             [MAP_DIMS.w][MAP_DIMS.h]?object.Object,
         ),
     };

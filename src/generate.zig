@@ -27,7 +27,7 @@ pub fn randomFillTileBuffer(state: *game.State) void {
 }
 
 pub fn randomFillObjectBuffer(state: *game.State) void {
-    state.foreground_buffer = std.mem.zeroes(
+    state.object_buffer = std.mem.zeroes(
         [MAP_DIMS.w][MAP_DIMS.h]?object.Object,
     );
     placePushables(state);
@@ -46,7 +46,7 @@ pub fn placePushables(state: *game.State) void {
     for (0..5) |_| {
         const cx = 1 + rand.int(u8) % (MAP_DIMS.w - 2);
         const cy = 1 + rand.int(u8) % (MAP_DIMS.h - 2);
-        state.foreground_buffer[cx][cy] = object.Object{ .pushable = .pot };
+        state.object_buffer[cx][cy] = object.Object{ .pushable = .pot };
     }
 }
 
@@ -56,8 +56,8 @@ pub fn placeStatics(state: *game.State) void {
     while (statics_placed < 5) {
         const cx = rand.int(u8) % MAP_DIMS.w;
         const cy = rand.int(u8) % MAP_DIMS.h;
-        if (state.foreground_buffer[cx][cy] != null) continue;
-        state.foreground_buffer[cx][cy] = object.Object{ .static = .shrub };
+        if (state.object_buffer[cx][cy] != null) continue;
+        state.object_buffer[cx][cy] = object.Object{ .static = .shrub };
         statics_placed += 1;
     }
 }
@@ -68,8 +68,8 @@ pub fn placeGoals(state: *game.State) void {
     while (goals_placed < 5) {
         const cx = rand.int(u8) % MAP_DIMS.w;
         const cy = rand.int(u8) % MAP_DIMS.h;
-        if (state.foreground_buffer[cx][cy] != null) continue;
-        state.foreground_buffer[cx][cy] = object.Object{ .goal = .empty };
+        if (state.object_buffer[cx][cy] != null) continue;
+        state.goal_buffer[cx][cy] = true;
         goals_placed += 1;
     }
 }
@@ -80,8 +80,8 @@ pub fn placeCharacter(state: *game.State, who: characters.Identity) void {
     while (!placed) {
         const cx = rand.int(u8) % MAP_DIMS.w;
         const cy = rand.int(u8) % MAP_DIMS.h;
-        if (state.foreground_buffer[cx][cy] != null) continue;
-        state.foreground_buffer[cx][cy] = object.Object{ .character = object.Character{ .sprite = who, .direction = .down } };
+        if (state.object_buffer[cx][cy] != null) continue;
+        state.object_buffer[cx][cy] = object.Object{ .character = object.Character{ .sprite = who, .direction = .down } };
         placed = true;
     }
 }

@@ -9,19 +9,27 @@ const MAP_DIMS = game.MAP_DIMS;
 
 pub fn shiftObject(st: *game.State, dire: direction.XY, pos: position.XY) void {
     const dest = position.shiftXY(MAP_DIMS, dire, pos);
-    st.foreground_buffer[dest.x][dest.y] = st.foreground_buffer[pos.x][pos.y];
-    st.foreground_buffer[pos.x][pos.y] = null;
+    st.object_buffer[dest.x][dest.y] = st.object_buffer[pos.x][pos.y];
+    st.object_buffer[pos.x][pos.y] = null;
 }
 
 pub fn isEmptySpace(st: *game.State, pos: position.XY) bool {
-    return st.foreground_buffer[pos.x][pos.y] == null;
+    return st.object_buffer[pos.x][pos.y] == null;
+}
+
+pub fn isPushable(st: *game.State, pos: position.XY) bool {
+    if (st.object_buffer[pos.x][pos.y] == null) return false;
+    switch (st.object_buffer[pos.x][pos.y].?) {
+        .pushable => |_| return true,
+        else => return false,
+    }
 }
 
 // TODO extract all relevant info into struct in one pass
 pub fn adaPosition(st: *game.State) position.XY {
     for (0..MAP_DIMS.w) |x| {
         for (0..MAP_DIMS.h) |y| {
-            const o = st.foreground_buffer[x][y];
+            const o = st.object_buffer[x][y];
             if (o == null) continue;
             switch (o.?) {
                 .character => |c| {
@@ -33,6 +41,7 @@ pub fn adaPosition(st: *game.State) position.XY {
             }
         }
     }
+    //TODO error state using error return path
     unreachable;
 }
 
@@ -45,6 +54,9 @@ pub fn characterCanMove(st: *game.State, dire: direction.XY) bool {
     if (isEmptySpace(st, dest)) {
         return true;
     }
+    if (!isPushable(st, dest)) {
+        return false;
+    }
     const push_dest = position.shiftXY(MAP_DIMS, dire, dest);
     if (isEmptySpace(st, push_dest)) {
         return true;
@@ -54,5 +66,5 @@ pub fn characterCanMove(st: *game.State, dire: direction.XY) bool {
 
 pub fn faceDirection(st: *game.State, dire: direction.XY) void {
     const ada_pos = adaPosition(st);
-    st.foreground_buffer[ada_pos.x][ada_pos.y] = object.Object{ .character = object.Character{ .sprite = .ada, .direction = dire } };
+    st.object_buffer[ada_pos.x][ada_pos.y] = object.Object{ .character = object.Character{ .sprite = .ada, .direction = dire } };
 }
