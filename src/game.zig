@@ -63,9 +63,28 @@ pub const State = struct {
             const cur_ada_position = movement.adaPosition(self);
             const new_ada_position = position.shiftXY(MAP_DIMS, dire, cur_ada_position);
             if (!movement.isEmptySpace(self, new_ada_position)) {
+                if (movement.isTom(self, new_ada_position)) {
+                    self.randomize();
+                    return;
+                }
                 movement.shiftObject(self, dire, new_ada_position);
             }
             movement.shiftObject(self, dire, cur_ada_position);
         }
+        if (self.winCondition()) {
+            self.randomize();
+        }
+    }
+
+    fn winCondition(self: *State) bool {
+        for (0..MAP_DIMS.w) |x| {
+            for (0..MAP_DIMS.h) |y| {
+                if (self.goal_buffer[x][y]) {
+                    if (movement.isPot(self, position.XY{ .x = @intCast(x), .y = @intCast(y) })) continue;
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 };

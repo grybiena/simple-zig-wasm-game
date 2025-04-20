@@ -25,6 +25,25 @@ pub fn isPushable(st: *game.State, pos: position.XY) bool {
     }
 }
 
+pub fn isTom(st: *game.State, pos: position.XY) bool {
+    if (st.object_buffer[pos.x][pos.y] == null) return false;
+    switch (st.object_buffer[pos.x][pos.y].?) {
+        .character => |c| switch (c.sprite) {
+            .tom => return true,
+            else => return false,
+        },
+        else => return false,
+    }
+}
+
+pub fn isPot(st: *game.State, pos: position.XY) bool {
+    if (st.object_buffer[pos.x][pos.y] == null) return false;
+    switch (st.object_buffer[pos.x][pos.y].?) {
+        .pushable => |_| return true,
+        else => return false,
+    }
+}
+
 // TODO extract all relevant info into struct in one pass
 pub fn adaPosition(st: *game.State) position.XY {
     for (0..MAP_DIMS.w) |x| {
@@ -51,7 +70,7 @@ pub fn characterCanMove(st: *game.State, dire: direction.XY) bool {
     if (std.meta.eql(dest, ada_pos)) {
         return false;
     }
-    if (isEmptySpace(st, dest)) {
+    if (isEmptySpace(st, dest) or isTom(st, dest)) {
         return true;
     }
     if (!isPushable(st, dest)) {
