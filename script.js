@@ -4,9 +4,27 @@ var memory = new WebAssembly.Memory({
     maximum: 180 /* pages */,
 });
 
+var wins = 0;
+var losses = 0;
+
+const countResult = (result) => {
+  if (result) {
+    wins += 1;
+  } else {
+    losses += 1;
+  }
+  const win_el = document.getElementById("wins");
+  const loss_el = document.getElementById("losses");
+  win_el.innerHTML = wins;
+  loss_el.innerHTML = losses;
+
+  console.log(result);
+};
+
 var importObject = {
     env: {
         consoleLog: (arg) => console.log(arg), // Useful for debugging on zig's side
+        gameResult: (arg) => countResult(arg),
         memory: memory,
     },
 };

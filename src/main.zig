@@ -4,6 +4,8 @@ const input = @import("input.zig");
 
 extern fn consoleLog(arg: u32) void;
 
+extern fn gameResult(arg: bool) void;
+
 var state = game.State.new();
 
 // The returned pointer will be used as an offset integer to the wasm memory
@@ -27,5 +29,8 @@ export fn drawCanvas() void {
 
 export fn onInput(key: input.Key) void {
     const dire = input.toDirection(key);
-    state.move(dire);
+    if (state.move(dire)) |result| {
+        gameResult(result);
+        state.randomize();
+    }
 }

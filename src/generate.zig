@@ -27,6 +27,9 @@ pub fn randomFillTileBuffer(state: *game.State) void {
 }
 
 pub fn randomFillObjectBuffer(state: *game.State) void {
+    state.goal_buffer = std.mem.zeroes(
+        [MAP_DIMS.w][MAP_DIMS.h]bool,
+    );
     state.object_buffer = std.mem.zeroes(
         [MAP_DIMS.w][MAP_DIMS.h]?object.Object,
     );

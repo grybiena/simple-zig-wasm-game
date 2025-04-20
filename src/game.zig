@@ -57,23 +57,38 @@ pub const State = struct {
         }
     }
 
-    pub fn move(self: *State, dire: direction.XY) void {
-        movement.faceDirection(self, dire);
-        if (movement.characterCanMove(self, dire)) {
-            const cur_ada_position = movement.adaPosition(self);
+    pub fn move(self: *State, dire: direction.XY) ?bool {
+        movement.faceDirection(self, .ada, dire);
+        if (movement.characterCanMove(self, .ada, dire)) {
+            const cur_ada_position = movement.characterPosition(self, .ada);
             const new_ada_position = position.shiftXY(MAP_DIMS, dire, cur_ada_position);
             if (!movement.isEmptySpace(self, new_ada_position)) {
                 if (movement.isTom(self, new_ada_position)) {
-                    self.randomize();
-                    return;
+                    return false;
                 }
                 movement.shiftObject(self, dire, new_ada_position);
             }
             movement.shiftObject(self, dire, cur_ada_position);
         }
-        if (self.winCondition()) {
-            self.randomize();
+
+        const tom_dir = movement.tomMove(self);
+        if (movement.characterCanMove(self, .tom, tom_dir)) {
+            const cur_tom_position = movement.characterPosition(self, .tom);
+            const new_tom_position = position.shiftXY(MAP_DIMS, tom_dir, cur_tom_position);
+            if (!movement.isEmptySpace(self, new_tom_position)) {
+                if (movement.isAda(self, new_tom_position)) {
+                    self.randomize();
+                    return false;
+                }
+                movement.shiftObject(self, tom_dir, new_tom_position);
+            }
+            movement.shiftObject(self, tom_dir, cur_tom_position);
         }
+
+        if (self.winCondition()) {
+            return true;
+        }
+        return null;
     }
 
     fn winCondition(self: *State) bool {
