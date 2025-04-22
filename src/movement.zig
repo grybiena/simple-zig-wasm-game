@@ -4,6 +4,7 @@ const direction = @import("direction.zig");
 const position = @import("position.zig");
 const object = @import("object.zig");
 const characters = @import("characters.zig");
+const distance = @import("distance.zig");
 
 const CANVAS_SIZE = game.CANVAS_SIZE;
 const MAP_DIMS = game.MAP_DIMS;
@@ -49,10 +50,10 @@ pub fn isAda(st: *game.State, pos: position.XY) bool {
 }
 
 pub fn tomMove(st: *game.State) direction.XY {
-    const ada_pos = characterPosition(st, .ada);
+    const tom_goal = tomGoal(st);
     const tom_pos = characterPosition(st, .tom);
-    const dx: i16 = @as(i16, ada_pos.x) - @as(i16, tom_pos.x);
-    const dy: i16 = @as(i16, ada_pos.y) - @as(i16, tom_pos.y);
+    const dx: i16 = @as(i16, tom_goal.x) - @as(i16, tom_pos.x);
+    const dy: i16 = @as(i16, tom_goal.y) - @as(i16, tom_pos.y);
     if (@abs(dx) > @abs(dy)) {
         if (dx > 0) {
             return .right;
@@ -63,6 +64,30 @@ pub fn tomMove(st: *game.State) direction.XY {
         return .down;
     }
     return .up;
+}
+
+fn tomGoal(st: *game.State) position.XY {
+    const tom_pos = characterPosition(st, .tom);
+    var goal_pos: ?position.XY = null;
+    for (0..MAP_DIMS.w) |x| {
+        for (0..MAP_DIMS.h) |y| {
+            const o = st.object_buffer[x][y];
+            if (o == null) continue;
+            switch (o.?) {
+                .pushable => |_| {
+                    if (st.goal_buffer[x][y]) {
+                        const pot_pos = position.XY{ .x = @intCast(x), .y = @intCast(y) };
+                        if (goal_pos == null or distance.manhattan(tom_pos, pot_pos) < distance.manhattan(tom_pos, goal_pos.?)) {
+                            goal_pos = pot_pos;
+                        }
+                    }
+                },
+                else => continue,
+            }
+        }
+    }
+    if (goal_pos != null) return goal_pos.?;
+    return characterPosition(st, .ada);
 }
 
 pub fn isPot(st: *game.State, pos: position.XY) bool {
